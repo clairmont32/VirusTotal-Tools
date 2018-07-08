@@ -1,16 +1,15 @@
 __author__ = 'Matthew Clairmont'
 __version__ = '1.0'
-__date__ = 'Jun 27, 2018'
+__date__ = 'July 7, 2018'
 # Remake of the Python 2.7 version
 # VT Domain Scanner takes a file of domains, submits them to the Virus Total
 # domain scanning API and outputs the domain and AV hits to a text file.
 
 import time
 import requests
-import apikey
 import csv
 
-apikey = '' #### ENTER API KEY HERE ####
+apikey = 'INSERT API KEY HERE' #### ENTER API KEY HERE ####
 
 requests.urllib3.disable_warnings()
 client = requests.session()
@@ -42,10 +41,10 @@ def DomainScanner(domain):
                 print('There was an error submitting the domain for scanning.')
                 print(jsonResponse['verbose_msg'])
             elif jsonResponse['response_code'] == -2:
-                print('{!r} is queued for scanning.'.format(domainSani))
+                print('{!s} is queued for scanning.'.format(domainSani))
                 delay[domain] = 'queued'
             else:
-                print(domainSani, 'was scanned successfully.')
+                print('{!s} was scanned successfully.'.format(domainSani))
 
         except ValueError:
             print('There was an error when scanning {!s}. Adding domain to error list....'.format(domainSani))
@@ -114,7 +113,7 @@ def DomainReportReader(domain, delay):
             '''
 
             data = [scandate, domainSani, positives, total, permalink]
-            return data, detections
+            return data
 
         except ValueError:
             print('There was an error when scanning {!s}. Adding domain to error list....'.format(domainSani))
@@ -145,13 +144,15 @@ except IOError as ioerr:
 
 ##### CHANGE TO TEXT FILE PATH. ONE DOMAIN PER LINE! #####
 try:
-    with open('PATH TO FILE', 'r') as infile:
-        tmp = file.readlines()
-        for domain in tmp:
+    with open('domains.txt', 'r') as infile:
+        for domain in infile:
+            domain = domain.strip('\n')
             delay = DomainScanner(domain)
             data = DomainReportReader(domain, delay)
-            #dataWriter = csv.writer(file, delimiter=',')
-            #dataWriter.writerow(data)
+            with open('results.csv', 'a') as rfile:
+                dataWriter = csv.writer(file, delimiter=',')
+                dataWriter.writerow(data)
+            time.sleep(15)  # wait for VT API rate limiting
 except IOError as ioerr:
     print('Please ensure the file is closed.')
     print(ioerr)
