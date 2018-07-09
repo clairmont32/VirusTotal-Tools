@@ -1,5 +1,6 @@
 # VT-Domain-Scanner
-Takes an input file with domains on each line and passes them to the VT API then writes the following items to a CSV.
+Takes an input file with domains or IPs on each line and passes them to the VT API then writes the following items to a CSV. 
+IPs that are put through this scanner is effectively doing a HTTP/HTTPS check to see if a direct IP connection is malicious.
 * Most recent scan date/time
 * Sanitized domain
 * Count of non-clean detections
