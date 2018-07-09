@@ -9,14 +9,15 @@ import time
 import requests
 import csv
 
-apikey = 'INSERT API KEY HERE' #### ENTER API KEY HERE ####
+apikey = '' #### ENTER API KEY HERE ####
 
 requests.urllib3.disable_warnings()
 client = requests.session()
 client.verify = False
-
 domainErrors = []
 delay = {}
+
+
 # scan the domain to ensure results are fresh
 def DomainScanner(domain):
     url = 'https://www.virustotal.com/vtapi/v2/url/scan'
@@ -91,7 +92,7 @@ def DomainReportReader(domain, delay):
             # print error if the scan had an issue
             if jsonResponse['response_code'] is 0:
                 print('There was an error submitting the domain for scanning.')
-                print(jsonResponse['verbose_msg'])
+                pass
 
             elif jsonResponse['response_code'] == -2:
                 print('Report for {!r} is not ready yet. Please check the site\'s report.'.format(domainSani))
@@ -116,6 +117,10 @@ def DomainReportReader(domain, delay):
             return data
 
         except ValueError:
+            print('There was an error when scanning {!s}. Adding domain to error list....'.format(domainSani))
+            domainErrors.append(domainSani)
+
+        except KeyError:
             print('There was an error when scanning {!s}. Adding domain to error list....'.format(domainSani))
             domainErrors.append(domainSani)
 
@@ -147,12 +152,16 @@ try:
     with open('domains.txt', 'r') as infile:
         for domain in infile:
             domain = domain.strip('\n')
-            delay = DomainScanner(domain)
-            data = DomainReportReader(domain, delay)
-            with open('results.csv', 'a') as rfile:
-                dataWriter = csv.writer(file, delimiter=',')
-                dataWriter.writerow(data)
-            time.sleep(15)  # wait for VT API rate limiting
+            try:
+                delay = DomainScanner(domain)
+                data = DomainReportReader(domain, delay)
+                with open('results.csv', 'a') as rfile:
+                    dataWriter = csv.writer(file, delimiter = ',')
+                    dataWriter.writerow(data)
+                    time.sleep(15)  # wait for VT API rate limiting
+            except:
+                pass
+
 except IOError as ioerr:
     print('Please ensure the file is closed.')
     print(ioerr)
@@ -160,3 +169,4 @@ except IOError as ioerr:
 count = len(domainErrors)
 if count > 0:
     print('There were {!s} errors scanning domains'.format(count))
+    print(domainErrors)
