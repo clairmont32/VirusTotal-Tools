@@ -1,15 +1,16 @@
 __author__ = 'Matthew Clairmont'
 __version__ = '1.0'
-__date__ = 'July 7, 2018'
+__date__ = 'July 10, 2018'
 # Remake of the Python 2.7 version
 # VT Domain Scanner takes a file of domains, submits them to the Virus Total
 # domain scanning API and outputs the domain and AV hits to a text file.
+# If you have a private API key, you can change the sleep times to 1 for faster scanning
 
 import time
 import requests
 import csv
 
-apikey = '' #### ENTER API KEY HERE ####
+apikey = ''  #### ENTER API KEY HERE ####
 
 requests.urllib3.disable_warnings()
 client = requests.session()
@@ -61,6 +62,7 @@ def DomainScanner(domain):
         print('https://support.virustotal.com/hc/en-us/articles/115002118525-The-4-requests-minute-limitation-of-the-'
               'Public-API-is-too-low-for-me-how-can-I-have-access-to-a-higher-quota-')
 
+
 def DomainReportReader(domain, delay):
     # sleep 15 to control requests/min to API. Public APIs only allow for 4/min threshold,
     # you WILL get a warning email to the owner of the account if you exceed this limit.
@@ -81,6 +83,7 @@ def DomainReportReader(domain, delay):
     except requests.ConnectTimeout as timeout:
         print('Connection timed out. Error is as follows-')
         print(timeout)
+        exit(1)
 
     # sanitize domain after upload for safety
     domainSani = domain.replace('.', '[.]')
@@ -146,20 +149,21 @@ except IOError as ioerr:
     print('Please ensure the file is closed.')
     print(ioerr)
 
-
 ##### CHANGE TO TEXT FILE PATH. ONE DOMAIN PER LINE! #####
 try:
-    with open('domains.txt', 'r') as infile:
+    with open('domains.txt', 'r') as infile:  # keeping the file open because it shouldnt
+                                              # be opened/modified during reading anyway
         for domain in infile:
             domain = domain.strip('\n')
             try:
                 delay = DomainScanner(domain)
                 data = DomainReportReader(domain, delay)
                 with open('results.csv', 'a') as rfile:
-                    dataWriter = csv.writer(file, delimiter = ',')
+                    dataWriter = csv.writer(rfile, delimiter = ',')
                     dataWriter.writerow(data)
                     time.sleep(15)  # wait for VT API rate limiting
-            except:
+            except Exception as err:  # keeping it
+                print('Encounted an error but scanning will continue.', err)
                 pass
 
 except IOError as ioerr:
