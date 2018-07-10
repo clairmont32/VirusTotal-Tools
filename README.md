@@ -7,7 +7,13 @@ IPs that are put through this scanner is effectively doing a HTTP/HTTPS check to
 * Total AV scans
 * Link to scan results
 
-## Prerequisites 
+## Exe Version
+Exe version of the script has been modified for CLI usage. It will still write the same information as the script to a CSV file which is written to the directory where the script is run from.
+* Prompts for API key
+* Status of key (public/private)
+* Filepath to a file
+
+## Script Prerequisites 
 * Python 3.x+
 * VirusTotal API key
 * requests library
