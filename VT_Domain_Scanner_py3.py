@@ -10,7 +10,7 @@ import time
 import requests
 import csv
 
-apikey = ''  #### ENTER API KEY HERE ####
+apikey = '96f7282dc538986b7f90bbd0195ab4b24579ee11f7ec43b87cd7c470db916164'  #### ENTER API KEY HERE ####
 
 requests.urllib3.disable_warnings()
 client = requests.session()
@@ -26,11 +26,13 @@ def DomainScanner(domain):
 
     # attempt connection to VT API and save response as r
     try:
-        r = requests.post(url, params=params)
+        r = client.post(url, params=params)
     except requests.ConnectTimeout as timeout:
         print('Connection timed out. Error is as follows-')
         print(timeout)
 
+    print(domain)
+    print(r)
     # sanitize domain after upload for safety
     domainSani = domain.replace('.', '[.]')
     # handle ValueError response which may indicate an invalid key or an error with scan
@@ -79,7 +81,7 @@ def DomainReportReader(domain, delay):
 
     # attempt connection to VT API and save response as r
     try:
-        r = requests.post(url, params=params)
+        r = client.post(url, params=params)
     except requests.ConnectTimeout as timeout:
         print('Connection timed out. Error is as follows-')
         print(timeout)
@@ -109,13 +111,6 @@ def DomainReportReader(domain, delay):
             positives = jsonResponse['positives']
             total = jsonResponse['total']
 
-            ''' THIS SECTION IS FOR LATER DEV IMPLEMENTATION
-            detections = {}
-            for vendor, result in jsonResponse['scans'].items():  # sheer laziness of not having to reassign variables
-                if 'clean site' not in result['result'] and 'unrated site' not in result['result']:
-                    detections[vendor] = result['result']
-            '''
-
             data = [scandate, domainSani, positives, total, permalink]
             return data
 
@@ -135,10 +130,7 @@ def DomainReportReader(domain, delay):
         time.sleep(10)
         DomainReportReader(domain, delay)
 
-
-# I recognize that I'm keeping the file open this entire time and it may be a little more memory usage
-# however, I'm tired and lazy atm and I presume you aren't going to
-# open this for the file duration of the script
+# open results file and write header
 try:
     file = open('results.csv', 'w+', newline='')
     header = ['Scan Date', 'Domain', 'Detection Ratio', 'Vendor', 'Category', 'Permalink']
@@ -151,6 +143,7 @@ except IOError as ioerr:
 
 ##### CHANGE TO TEXT FILE PATH. ONE DOMAIN PER LINE! #####
 try:
+    # read domains from file and pass them to DomainScanner and DomainReportReader
     with open('domains.txt', 'r') as infile:  # keeping the file open because it shouldnt
                                               # be opened/modified during reading anyway
         for domain in infile:
@@ -163,13 +156,14 @@ try:
                     dataWriter.writerow(data)
                     time.sleep(15)  # wait for VT API rate limiting
             except Exception as err:  # keeping it
-                print('Encounted an error but scanning will continue.', err)
+                print('Encountered an error but scanning will continue.', err)
                 pass
 
 except IOError as ioerr:
     print('Please ensure the file is closed.')
     print(ioerr)
 
+# inform the user if there were any errors encountered
 count = len(domainErrors)
 if count > 0:
     print('There were {!s} errors scanning domains'.format(count))
