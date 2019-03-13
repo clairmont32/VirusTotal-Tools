@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,20 +23,25 @@ func getApiKey() string {
 	return ""
 }
 
+// send a hash to VT
 func hashReport(apiKey string, hash string) {
 	client := http.Client{Timeout: time.Duration(5 * time.Second)}
+	var buffer bytes.Buffer
 
 	resp, postErr := client.PostForm("https://www.virustotal.com/vtapi/v2/file/report", url.Values{"apikey": {apiKey}, "resource": {hash}})
 	if postErr != nil {
 		log.Fatal(postErr)
 	}
 	if resp.StatusCode == http.StatusOK {
-		fmt.Println(resp.StatusCode)
-	} else {
+		if n, bufErr := buffer.ReadFrom(resp.Body); bufErr == nil {
+			fmt.Printf("Bytes %v \n", n)
+			fmt.Print(buffer.String())
+		} else {
+			fmt.Println(bufErr)
+		}
 
-		fmt.Println(resp.StatusCode)
+		return
 	}
-	return
 }
 
 func main() {
