@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -24,7 +25,7 @@ func getApiKey() string {
 }
 
 // send a hash to VT
-func hashReport(apiKey string, hash string) {
+func getHashReport(apiKey string, hash string) bytes.Buffer {
 	client := http.Client{Timeout: time.Duration(5 * time.Second)}
 	var buffer bytes.Buffer
 
@@ -35,18 +36,26 @@ func hashReport(apiKey string, hash string) {
 	if resp.StatusCode == http.StatusOK {
 		if n, bufErr := buffer.ReadFrom(resp.Body); bufErr == nil {
 			fmt.Printf("Bytes %v \n", n)
-			fmt.Print(buffer.String())
-		} else {
-			fmt.Println(bufErr)
+			// fmt.Print(buffer.String())
 		}
 
-		return
 	}
+	return buffer
 }
 
+// open saved VT response for offline use. Not effective for large files
+func openSavedResponse(filename string) []byte {
+	if fileContent, readErr := ioutil.ReadFile(filename); readErr != nil {
+		panic(readErr)
+	} else {
+		return fileContent
+	}
+
+}
 func main() {
-	const hash = "292b42c94a99f6074258181080b46e31"
-	apiKey := getApiKey()
-	hashReport(apiKey, hash)
+	// const hash = "292b42c94a99f6074258181080b46e31"
+	// apiKey := getApiKey()
+	// buf := getHashReport(apiKey, hash)
+	// rawContent := openSavedResponse("vt_response.txt")
 
 }
