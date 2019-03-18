@@ -31,10 +31,12 @@ def DomainScanner(domain):
         print('Connection timed out. Error is as follows-')
         print(timeout)
 
-    print(domain)
-    print(r)
     # sanitize domain after upload for safety
     domainSani = domain.replace('.', '[.]')
+
+    print(domainSani)
+    print(r)
+
     # handle ValueError response which may indicate an invalid key or an error with scan
     # if an except is raised, add the domain to a list for tracking purposes
     if r.status_code == 200:
@@ -132,10 +134,10 @@ def DomainReportReader(domain, delay):
 
 # open results file and write header
 try:
-    file = open('results.csv', 'w+', newline='')
-    header = ['Scan Date', 'Domain', 'Detection Ratio', 'Vendor', 'Category', 'Permalink']
-    headerWriter = csv.DictWriter(file, fieldnames=header)
-    headerWriter.writeheader()
+    rfile = open('results.csv', 'w+', newline='')
+    dataWriter = csv.writer(rfile, delimiter = ',')
+    header = ['Scan Date', 'Domain', '# of Positive Scans', '# of Total Scans', 'Permalink']
+    dataWriter.writerow(header)
 
 except IOError as ioerr:
     print('Please ensure the file is closed.')
@@ -151,10 +153,8 @@ try:
             try:
                 delay = DomainScanner(domain)
                 data = DomainReportReader(domain, delay)
-                with open('results.csv', 'a') as rfile:
-                    dataWriter = csv.writer(rfile, delimiter = ',')
-                    dataWriter.writerow(data)
-                    time.sleep(15)  # wait for VT API rate limiting
+                dataWriter.writerow(data)
+                time.sleep(15)  # wait for VT API rate limiting
             except Exception as err:  # keeping it
                 print('Encountered an error but scanning will continue.', err)
                 pass
