@@ -58,6 +58,7 @@ type Status struct {
 }
 
 type FileScan struct {
+	// Vendor    string              `json:"vendors"`
 	Detected  bool   `json:"detected"`
 	Version   string `json:"version"`
 	Result    string `json:"result"`
@@ -69,7 +70,6 @@ type FileReport struct {
 	Scans     map[string]FileScan `json:"scans"`
 	Positives int                 `json:"positives"`
 	Total     int                 `json:"total"`
-	Vendor    string              `json:"vendors"`
 	Detected  bool                `json:"detected"`
 	Result    string              `json:"result"`
 }
