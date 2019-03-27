@@ -1,5 +1,5 @@
 # API file
-key.go
+vtapi*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
