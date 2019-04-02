@@ -3,6 +3,7 @@ package main
 import (
 	"VirusTotal-Tools/vtapi"
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -71,32 +72,61 @@ type FileReport struct {
 	Scans     map[string]VendorResults `json:"scans"`
 }
 
-func printDetections(content []byte) {
-	jsonResp := new(FileReport)
-	if unmashErr := json.Unmarshal(content, jsonResp); unmashErr != nil {
+func extractData(content *[]byte) (data [][]string, jsonResp *FileReport) {
+	jsonResp = new(FileReport)
+	if unmashErr := json.Unmarshal(*content, jsonResp); unmashErr != nil {
 		panic(unmashErr)
 	}
 
+	// var data [][]string
 	for vendor, details := range jsonResp.Scans {
 		if details.Detected == true {
-			fmt.Printf("Vendor: %v \n", vendor)
-			fmt.Printf("Result: %v \n", details.Result)
-			fmt.Printf("Version: %v \n\n", details.Version)
+			tmp := []string{vendor, details.Result, details.Version}
+			data = append(data, tmp)
 		}
 	}
 
+	return data, jsonResp
+}
+
+func printDetections(data [][]string, jsonResp *FileReport) {
+	for _, item := range data {
+		fmt.Printf("Vendor: %v\n", item[0])
+		fmt.Printf("Malware: %v\n", item[1])
+		fmt.Printf("Version: %v\n\n", item[2])
+	}
 	fmt.Printf("Total: %v/%v \n", jsonResp.Positives, jsonResp.Total)
 	fmt.Printf("Permalink: %v \n", jsonResp.Permalink)
 }
 
-func saveToCSV(content []byte) {
-	if _, csvErr := os.Create("Detected.csv"); csvErr != nil {
+
+func saveToCSV(content *[][]string) {
+	if file, csvErr := os.Create("Detected.csv"); csvErr != nil {
 		panic(csvErr)
-	}
+	} else {
+		defer func() {
+			closeErr := file.Close()
+			if closeErr != nil {
+				panic(closeErr)
+			}
+		}()
 
-	csvWriter := encoding/csv.
+		csvWriter := csv.NewWriter(file)
+		if writeErr := csvWriter.Write([]string{"Vendor, Detection, Version"}); writeErr != nil {
+			panic(writeErr)
+		}
 
-}
+		for _, u := range *content {
+			writeErr := csvWriter.Write(u)
+			if writeErr != nil {
+				panic(writeErr)
+			}
+		}
+		csvWriter.Flush()
+		fmt.Println("Results written to CSV")
+
+}}
+
 
 func main() {
 	const hash = "292b42c94a99f6074258181080b46e31"
@@ -104,6 +134,9 @@ func main() {
 	// buf := getHashReport(hash)
 	// saveResponse(buf)
 	rawContent := openSavedResponse("vt_response.json")
-	printDetections(rawContent)
+
+	data, jsonResp := extractData(&rawContent)
+	printDetections(data, jsonResp)
+	saveToCSV(&data)
 
 }
