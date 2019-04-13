@@ -143,6 +143,7 @@ except IOError as ioerr:
     print('Please ensure the file is closed.')
     print(ioerr)
 
+
 ##### CHANGE TO TEXT FILE PATH. ONE DOMAIN PER LINE! #####
 try:
     # read domains from file and pass them to DomainScanner and DomainReportReader
@@ -153,8 +154,9 @@ try:
             try:
                 delay = DomainScanner(domain)
                 data = DomainReportReader(domain, delay)
-                dataWriter.writerow(data)
-                time.sleep(15)  # wait for VT API rate limiting
+                if data:
+                    dataWriter.writerow(data)
+                    time.sleep(15)  # wait for VT API rate limiting
             except Exception as err:  # keeping it
                 print('Encountered an error but scanning will continue.', err)
                 pass
