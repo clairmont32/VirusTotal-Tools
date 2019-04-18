@@ -1,3 +1,12 @@
+# ignore csv
+*.csv
+
+# ignore json
+*.json
+
+# ignore api key
+key.go
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
