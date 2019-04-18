@@ -1,6 +1,7 @@
 package vtFileReport
 
 import (
+	"VirusTotal-Tools/go/src/vtapi"
 	"bufio"
 	"bytes"
 	"encoding/csv"
@@ -12,7 +13,6 @@ import (
 	"net/url"
 	"os"
 	"time"
-	"vtapi"
 )
 
 // send a hash to VT
@@ -20,7 +20,7 @@ func getHashReport(hash string) (buffer bytes.Buffer) {
 	// http client settings
 	client := http.Client{Timeout: time.Duration(5 * time.Second)}
 
-	resp, postErr := client.PostForm("https://www.virustotal.com/vtapi/v2/file/report", url.Values{"apikey": {vtapi.Key}, "resource": {hash}})
+	resp, postErr := client.PostForm("https://www.virustotal.com/vtapi/v2/file/report", url.Values{"apikey": {apikey.Key}, "resource": {hash}})
 	if postErr != nil {
 		log.Fatal(postErr)
 	}
