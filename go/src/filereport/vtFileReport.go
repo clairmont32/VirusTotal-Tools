@@ -53,8 +53,6 @@ func getHashReport(hash string) (buffer bytes.Buffer) {
 	} else {
 		fmt.Println(resp.StatusCode)
 		os.Exit(resp.StatusCode)
-
-		return buffer
 	}
 	return
 }
