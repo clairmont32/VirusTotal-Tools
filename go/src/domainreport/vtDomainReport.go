@@ -44,17 +44,14 @@ func getDomainReport(d string) (buffer bytes.Buffer) {
 }
 
 type Status struct {
-	ResponseCode	int		`json:"response_code"`
-	Resource		string	`json:"resource"`
-	VerboseMsg		string	`json:"verbose_msg"`
+	ResponseCode int    `json:"response_code"`
+	Resource     string `json:"resource"`
+	VerboseMsg   string `json:"verbose_msg"`
 }
 
 type UrlReport struct {
 	Status
-
 }
-
-
 
 // save response to file for offline use
 func saveResponse(buffer bytes.Buffer) {
@@ -70,17 +67,9 @@ func saveResponse(buffer bytes.Buffer) {
 
 	// buffer the writer
 	writer := bufio.NewWriter(file)
-
-	// if writing fails 3 times, log and exit
-	for i := 0; i <= 3; {
-		_, writeErr := writer.Write(buffer.Bytes())
-		if writeErr != nil {
-			time.Sleep(time.Millisecond * 200)
-			i++
-			fmt.Println("Could not write contents to file %v", writeErr)
-		}
-		break
-
+	_, bufWrErr := writer.Write(buffer.Bytes())
+	if bufWrErr != nil {
+		log.Fatalf("Could not write to buffer.\n%v", bufWrErr)
 	}
 
 	// flush and close file
@@ -93,16 +82,33 @@ func saveResponse(buffer bytes.Buffer) {
 
 }
 
+func parseToJson(buffer bytes.Buffer) (jsonResp UrlReport){
+	jsonErr := json.Unmarshal(buffer.Bytes(), &jsonResp)
+	if jsonErr != nil {
+		log.Fatalf("Could not parse JSON response\n%v", jsonErr)
+	}
+	return
+}
+
+func checkVtResponseCode(response UrlReport) {
+	if response.ResponseCode == 0 {
+		// TODO: lookup response code 0 and handle actions here
+	} else if response.ResponseCode == -1 {
+		// TODO: ditto above
+	} else if response.ResponseCode == 1 {
+		// TODO: continue extracting malicious results and outputting to console/csv
+	}
+
+}
 
 func main() {
- // TODO: verify above works. Write a test for VT response codes?
+	// TODO: verify above works. Write a test for VT response codes?
 
- bufContent := getDomainReport("rockstargames.com")
+	bufContent := getDomainReport("rockstargames.com")
 
- var content UrlReport
+	var content UrlReport
 	_ = json.Unmarshal(bufContent.Bytes(), &content)
 
-saveResponse(bufContent)
-
+	saveResponse(bufContent)
 
 }
