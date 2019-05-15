@@ -82,6 +82,7 @@ func saveResponse(buffer bytes.Buffer) {
 
 }
 
+
 func parseToJson(buffer bytes.Buffer) (jsonResp UrlReport){
 	jsonErr := json.Unmarshal(buffer.Bytes(), &jsonResp)
 	if jsonErr != nil {
