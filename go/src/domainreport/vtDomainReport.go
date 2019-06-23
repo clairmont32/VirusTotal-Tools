@@ -21,7 +21,7 @@ func getApiEnv() (apiKey string) {
 			return
 		}
 	}
-	return "No API key set in environment variables!"}}
+	return "No API key set in environment variables!"
 }
 
 func getDomainReport(d string, apiKey string) (buffer bytes.Buffer, sanitizedDomain string) {
@@ -106,14 +106,13 @@ func saveResponse(buffer bytes.Buffer) {
 }
 
 // temp func to save VT response
-func parseToJson(buffer bytes.Buffer) (jsonResp UrlReport){
+func parseToJson(buffer bytes.Buffer) (jsonResp UrlReport) {
 	jsonErr := json.Unmarshal(buffer.Bytes(), &jsonResp)
 	if jsonErr != nil {
 		log.Fatalf("Could not parse JSON response\n%v", jsonErr)
 	}
 	return
 }
-
 
 func arguments() {
 	//TODO add cli arguments for single domain or file of only domains
