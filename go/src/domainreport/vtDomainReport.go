@@ -13,31 +13,29 @@ import (
 	"time"
 )
 
-func getApiEnv() (apiKey string) {
-	allEnvs := os.Environ()
-	for _, env := range allEnvs {
-		if strings.Contains(env, "VTAPI") {
-			apiKey = strings.Split(env, "=")[1]
-			return
-		}
+func getApiEnv() string {
+	if len(os.Getenv("VT")) > 0 {
+		return os.Getenv("VT")
+	} else {
+		log.Fatal("No API key set in environment variables!")
 	}
-	return "No API key set in environment variables!"
+	return ""
 }
 
-func getDomainReport(d string, apiKey string) (buffer bytes.Buffer, sanitizedDomain string) {
-	client := http.Client{Timeout: time.Duration(10) * time.Second}
-	reportUrl := "http://www.virustotal.com/vtapi/v2/url/report"
-	resp, err := client.PostForm(reportUrl, url.Values{"apikey": {apiKey}, "resource": {d}})
-
+func getDomainReport(d string) (buffer bytes.Buffer, sanitizedDomain string) {
 	sanitizedDomain = strings.ReplaceAll(d, ".", "[.]")
 
+	client := http.Client{Timeout: time.Duration(10) * time.Second}
+	reportUrl := "http://www.virustotal.com/vtapi/v2/domain/report"
+	resp, err := client.PostForm(reportUrl, url.Values{"apikey": {getApiEnv()}, "resource": {d}})
 	if err != nil {
 		log.Fatalf("Improper requeest given\n %v", err)
 	}
+
 	if resp.StatusCode == http.StatusNoContent {
 		fmt.Println("Rate-limit exceeded. Trying again in 15 seconds...")
 		time.Sleep(time.Duration(15) * time.Second)
-		getDomainReport(d, getApiEnv())
+		getDomainReport(d)
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -48,6 +46,7 @@ func getDomainReport(d string, apiKey string) (buffer bytes.Buffer, sanitizedDom
 		if _, bufErr := buffer.ReadFrom(resp.Body); bufErr != nil {
 			log.Fatalf("Failed to read response into buffer\n%v", bufErr)
 		}
+
 		return buffer, sanitizedDomain
 	}
 	return
@@ -64,16 +63,15 @@ type UrlReport struct {
 }
 
 func checkVtResponseCode(response UrlReport, sDomain string, d string) {
-	if response.ResponseCode == 0 {
-		fmt.Printf("%v has not been observed by VirusTotal", sDomain)
-	} else if response.ResponseCode == -2 {
+	if response.Status.ResponseCode == 0 {
+		fmt.Printf("%v has not been observed by VirusTotal\n", sDomain)
+	} else if response.Status.ResponseCode == -2 {
 		fmt.Printf("%v is queued for scanning. Checking for results in 15s", sDomain)
 		time.Sleep(15 * time.Second)
-		getDomainReport(d, getApiEnv())
-	} else if response.ResponseCode == 1 {
-		// TODO: continue extracting malicious results and outputting to console/csv
+		getDomainReport(d)
+	} else if response.Status.ResponseCode == 1 {
+		return // TODO: continue processing
 	}
-
 }
 
 // save response to file for offline use
@@ -103,6 +101,7 @@ func saveResponse(buffer bytes.Buffer) {
 		log.Printf("Error closing %v \n%v", filename, closeErr)
 	}
 
+	fmt.Println("File saved")
 }
 
 // temp func to save VT response
@@ -120,12 +119,11 @@ func arguments() {
 
 func main() {
 	// TODO: verify above works. Write a test for VT response codes?
-	bufContent, sanitizedDomain := getDomainReport("rockstargames.com", getApiEnv())
+	bufContent, _ := getDomainReport("google.com")
 	var content UrlReport
 	_ = json.Unmarshal(bufContent.Bytes(), &content)
-
-	checkVtResponseCode(content, sanitizedDomain, "rockstargames.com")
-
 	saveResponse(bufContent)
+
+	// checkVtResponseCode(content, sanitizedDomain, "google.com")
 
 }
