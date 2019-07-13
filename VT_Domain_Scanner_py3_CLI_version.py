@@ -110,7 +110,6 @@ def DomainReportReader(domain, delay):
             # print error if the scan had an issue
             if jsonResponse['response_code'] is 0:
                 print('There was an error submitting the domain for scanning.')
-                pass
 
             elif jsonResponse['response_code'] == -2:
                 print('Report for {!r} is not ready yet. Please check the site\'s report.'.format(domainSani))
