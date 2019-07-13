@@ -159,7 +159,6 @@ try:
                     time.sleep(15)  # wait for VT API rate limiting
             except Exception as err:  # keeping it
                 print('Encountered an error but scanning will continue.', err)
-                pass
 
 except IOError as ioerr:
     print('Please ensure the file is closed.')
