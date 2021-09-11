@@ -71,7 +71,7 @@ def DomainScanner(domain):
         return delay
 
     # API TOS issue handling
-    elif r.status_code == 204:
+    else r.status_code == 204:
         print('Received HTTP 204 response. You may have exceeded your API request quota or rate limit.')
         print('https://support.virustotal.com/hc/en-us/articles/115002118525-The-4-requests-minute-limitation-of-the-'
               'Public-API-is-too-low-for-me-how-can-I-have-access-to-a-higher-quota-')
@@ -139,7 +139,7 @@ def DomainReportReader(domain, delay):
         print('Received HTTP 204 response. You may have exceeded your API request quota or rate limit.')
         print('https://support.virustotal.com/hc/en-us/articles/115002118525-The-4-requests-minute-limitation-of-the-'
               'Public-API-is-too-low-for-me-how-can-I-have-access-to-a-higher-quota-')
-        time.sleep(10)
+        time.sleep(15)
         DomainReportReader(domain, delay)
 
 
@@ -174,7 +174,7 @@ except IOError as ioerr:
     print('Please ensure the file exists and is closed.')
     print(ioerr)
 
-except FileNotFoundError as FNF:
+except FileNotFoundError:
     print('The domains file could not be found.')
 
 count = len(domainErrors)
